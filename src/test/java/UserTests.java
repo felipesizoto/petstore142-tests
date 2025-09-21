@@ -1,11 +1,17 @@
 import static org.hamcrest.Matchers.*;
 
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvFileSource;
+
 import com.google.gson.Gson;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType; 
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UserTests {
 
     private static final String BASE_URI = "https://petstore.swagger.io/v2";
@@ -14,9 +20,9 @@ public class UserTests {
     private static final int USER_ID = 397458401;
     private static final String USERNAME = "felipeAugusto"; 
 
-    
+    @Test
     @Order(1)
-    void testCreatUser(){
+    void testCreateUser(){
         RestAssured.baseURI = BASE_URI; 
 
         User user = new User();
@@ -54,7 +60,7 @@ public class UserTests {
                 .contentType(ContentType.JSON)
                 .log().all()
             .when()
-                .get("/user" + USERNAME)
+                .get("/user/" + USERNAME)
             .then()
                 .log().all()
                 .statusCode(200)
@@ -86,5 +92,68 @@ public class UserTests {
 
         RestAssured
             .given()
+                .contentType(ContentType.JSON)
+                .body(userJson)
+                .log().all()
+            .when()
+                .put("/user/" + USERNAME)
+            .then()
+                .log().all()
+                .statusCode(200)
+                .body("message", is(String.valueOf(USER_ID)));
     }
+
+    @Test
+    @Order(4)
+    void testDeleteUser(){
+        RestAssured.baseURI = BASE_URI; 
+
+        RestAssured
+        .given()
+            .contentType(ContentType.JSON)
+            .log().all()
+        .when()
+            .delete("/user/" + USERNAME)
+        .then()
+        .log().all()    
+        .statusCode(200)
+        .body("message", is(USERNAME)); 
+    } 
+
+    @ParameterizedTest
+    @Order(5)
+    @CsvFileSource(resources = "/csv/userMassa.csv", numLinesToSkip = 1)
+    void testCreateUserDDT(int id, String username, String firstName, String lastName, String email,
+                           String password, String phone, int userStatus){
+        
+        RestAssured.baseURI = BASE_URI;
+
+        User user = new User(); 
+        user.id = id;
+        user.username = username;
+        user.firstName = firstName;
+        user.lastName = lastName;
+        user.email = email; 
+        user.password = password;
+        user.phone = phone;
+        user.userStatus = userStatus; 
+
+        String userJson = gson.toJson(user); 
+
+        RestAssured
+            .given()
+                .contentType(ContentType.JSON)
+                .body(userJson)
+                .log().all()
+            .when()
+                .post("/user")
+            .then()
+                .log().all()
+                .statusCode(200)
+                .body("message", notNullValue()); 
+                            
+
+    }  
+
+
 }

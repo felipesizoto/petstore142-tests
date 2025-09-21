@@ -1,3 +1,4 @@
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -119,6 +120,15 @@ public class StoreTests {
                 .body("status", is(status))
                 .body("complete", is(complete)); 
 
+    } 
+
+     @AfterEach
+    void shortWait() {
+        try {
+            Thread.sleep(500); 
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
 }
